@@ -1,0 +1,36 @@
+# Go build artifacts
+/bin/
+/pkg/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go modules
+go.sum
+
+# Logs and temp files
+*.log
+*.tmp
+
+# VS Code settings
+.vscode/
+
+# Build and vendor directories
+/dist/
+/vendor/
+
+# MacOS and Windows system files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+
+# Coverage reports
+*.cover
+*.cov
