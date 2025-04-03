@@ -12,18 +12,20 @@ import (
 
 func GetMovies(w http.ResponseWriter, r *http.Request) {
 	var movies []models.Movie
-	db.DB.Find(&movies)
+	db.DB.Preload("Genre").Find(&movies)
 	json.NewEncoder(w).Encode(movies)
 }
 
 func GetMovieByID(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var movie models.Movie
-	result := db.DB.First(&movie, id)
+	result := db.DB.Preload("Genre").First(&movie, id)
+
 	if result.Error != nil {
 		http.Error(w, "Movie not found", http.StatusNotFound)
 		return
 	}
+
 	json.NewEncoder(w).Encode(movie)
 }
 
@@ -43,10 +45,12 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 func UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var movie models.Movie
+
 	if err := db.DB.First(&movie, id).Error; err != nil {
 		http.Error(w, "Movie not found", http.StatusNotFound)
 		return
 	}
+
 	json.NewDecoder(r.Body).Decode(&movie)
 	db.DB.Save(&movie)
 	json.NewEncoder(w).Encode(movie)
