@@ -25,7 +25,8 @@ func main() {
 	r.HandleFunc("/genres", handlers.GetGenres).Methods("GET")
 	r.HandleFunc("/genres/{id}", handlers.GetGenreByID).Methods("GET")
 	r.HandleFunc("/genres", handlers.CreateGenre).Methods("POST")
-
+	r.HandleFunc("/genres/{id}", handlers.UpdateGenre).Methods("PUT")
+	r.HandleFunc("/genres/{id}", handlers.DeleteGenre).Methods("DELETE")
 
 	log.Println("Server running at http://localhost:8080")
 	http.ListenAndServe(":8080", r)

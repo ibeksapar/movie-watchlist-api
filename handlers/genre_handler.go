@@ -34,8 +34,6 @@ func GetGenreByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(genre)
 }
 
-
-
 func CreateGenre(w http.ResponseWriter, r *http.Request) {
 	var genre models.Genre
 
@@ -51,4 +49,49 @@ func CreateGenre(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(genre)
+}
+
+func UpdateGenre(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	var genre models.Genre
+
+	if err := db.DB.First(&genre, id).Error; err != nil {
+		http.Error(w, "Genre not found", http.StatusNotFound)
+		return
+	}
+
+	var updatedGenre models.Genre
+	if err := json.NewDecoder(r.Body).Decode(&updatedGenre); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if updatedGenre.Name != "" {
+		genre.Name = updatedGenre.Name
+	}
+
+	if updatedGenre.Description != "" {
+		genre.Description = updatedGenre.Description
+	}
+
+
+	if err := db.DB.Save(&genre).Error; err != nil {
+		http.Error(w, "Failed to update genre", http.StatusInternalServerError)
+		return
+	}
+
+	db.DB.Preload("Movies").First(&genre)
+
+	json.NewEncoder(w).Encode(genre)
+}
+
+func DeleteGenre(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	if err := db.DB.Delete(&models.Genre{}, id).Error; err != nil {
+		http.Error(w, "Failed to delete genre", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
