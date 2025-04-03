@@ -28,7 +28,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 	if page <= 0 {
 		page = 1
 	}
-	
+
 	if limit <= 0 {
 		limit = 10
 	}
@@ -88,10 +88,25 @@ func GetMovieByID(w http.ResponseWriter, r *http.Request) {
 
 func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	var movie models.Movie
-	json.NewDecoder(r.Body).Decode(&movie)
 
-	if movie.Title == "" || movie.Rating <= 0 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if movie.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	if movie.Rating < 1 || movie.Rating > 10 {
+		http.Error(w, "Rating must be between 1 and 10", http.StatusBadRequest)
+		return
+	}
+
+	var genre models.Genre
+	if err := db.DB.First(&genre, movie.GenreID).Error; err != nil {
+		http.Error(w, "Genre does not exist", http.StatusBadRequest)
 		return
 	}
 
@@ -108,8 +123,37 @@ func UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&movie)
-	db.DB.Save(&movie)
+	var updatedMovie models.Movie
+	if err := json.NewDecoder(r.Body).Decode(&updatedMovie); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if updatedMovie.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	if updatedMovie.Rating < 1 || updatedMovie.Rating > 10 {
+		http.Error(w, "Rating must be between 1 and 10", http.StatusBadRequest)
+		return
+	}
+
+	var genre models.Genre
+	if err := db.DB.First(&genre, updatedMovie.GenreID).Error; err != nil {
+		http.Error(w, "Genre does not exist", http.StatusBadRequest)
+		return
+	}
+
+	movie.Title = updatedMovie.Title
+	movie.Rating = updatedMovie.Rating
+	movie.GenreID = updatedMovie.GenreID
+
+	if err := db.DB.Save(&movie).Error; err != nil {
+		http.Error(w, "Failed to update movie", http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(movie)
 }
 
