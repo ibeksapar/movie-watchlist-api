@@ -11,6 +11,8 @@ import (
 )
 
 func GetMovies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var movies []models.Movie
 
 	genreID := r.URL.Query().Get("genre_id")
@@ -73,6 +75,8 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMovieByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var movie models.Movie
 	result := db.DB.Preload("Genre").Preload("Reviews").First(&movie, id)
@@ -86,6 +90,8 @@ func GetMovieByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var movie models.Movie
 
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
@@ -114,6 +120,8 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var movie models.Movie
 

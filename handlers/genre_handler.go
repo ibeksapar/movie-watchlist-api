@@ -11,6 +11,8 @@ import (
 )
 
 func GetGenres(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var genres []models.Genre
 
 	if err := db.DB.Preload("Movies").Find(&genres).Error; err != nil {
@@ -23,6 +25,8 @@ func GetGenres(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetGenreByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var genre models.Genre
 
@@ -35,6 +39,8 @@ func GetGenreByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateGenre(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var genre models.Genre
 
 	if err := json.NewDecoder(r.Body).Decode(&genre); err != nil || genre.Name == "" {
@@ -52,6 +58,8 @@ func CreateGenre(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateGenre(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var genre models.Genre
 
@@ -85,7 +93,7 @@ func UpdateGenre(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(genre)
 }
 
-func DeleteGenre(w http.ResponseWriter, r *http.Request) {
+func DeleteGenre(w http.ResponseWriter, r *http.Request) {	
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
 	if err := db.DB.Delete(&models.Genre{}, id).Error; err != nil {

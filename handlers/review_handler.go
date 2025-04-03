@@ -11,6 +11,8 @@ import (
 )
 
 func CreateReview(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var review models.Review
 	if err := json.NewDecoder(r.Body).Decode(&review); err != nil || review.Score < 1 || review.Score > 10 || review.Content == "" {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -31,6 +33,8 @@ func CreateReview(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateReviewForMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	movieID, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, "Invalid movie ID", http.StatusBadRequest)
@@ -74,6 +78,8 @@ func CreateReviewForMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetReviewsByMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	movieID, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, "Invalid movie ID", http.StatusBadRequest)
@@ -90,12 +96,16 @@ func GetReviewsByMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetReviews(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var reviews []models.Review
 	db.DB.Find(&reviews)
 	json.NewEncoder(w).Encode(reviews)
 }
 
 func GetReviewByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var review models.Review
 
@@ -108,6 +118,8 @@ func GetReviewByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateReview(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var review models.Review
 
