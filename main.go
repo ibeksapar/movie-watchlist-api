@@ -21,6 +21,8 @@ func main() {
 	r.HandleFunc("/movies", handlers.CreateMovie).Methods("POST")
 	r.HandleFunc("/movies/{id}", handlers.UpdateMovie).Methods("PUT")
 	r.HandleFunc("/movies/{id}", handlers.DeleteMovie).Methods("DELETE")
+	r.HandleFunc("/movies/{id}/reviews", handlers.GetReviewsByMovie).Methods("GET")
+	r.HandleFunc("/movies/{id}/reviews", handlers.CreateReviewForMovie).Methods("POST")
 
 	r.HandleFunc("/genres", handlers.GetGenres).Methods("GET")
 	r.HandleFunc("/genres/{id}", handlers.GetGenreByID).Methods("GET")

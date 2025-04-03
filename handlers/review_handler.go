@@ -30,6 +30,65 @@ func CreateReview(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(review)
 }
 
+func CreateReviewForMovie(w http.ResponseWriter, r *http.Request) {
+	movieID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, "Invalid movie ID", http.StatusBadRequest)
+		return
+	}
+
+	var movie models.Movie
+	if err := db.DB.First(&movie, movieID).Error; err != nil {
+		http.Error(w, "Movie not found", http.StatusNotFound)
+		return
+	}
+
+	var review models.Review
+	if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if review.Score < 1 || review.Score > 10 {
+		http.Error(w, "Score must be between 1 and 10", http.StatusBadRequest)
+		return
+	}
+
+	review.MovieID = uint(movieID)
+
+	if err := db.DB.Create(&review).Error; err != nil {
+		http.Error(w, "Failed to create review", http.StatusInternalServerError)
+		return
+	}
+
+	var total int64
+	var sum int64
+	db.DB.Model(&models.Review{}).Where("movie_id = ?", movieID).Count(&total)
+	db.DB.Model(&models.Review{}).Select("SUM(score)").Where("movie_id = ?", movieID).Scan(&sum)
+
+	movie.Rating = float64(sum) / float64(total)
+	db.DB.Save(&movie)
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(review)
+}
+
+func GetReviewsByMovie(w http.ResponseWriter, r *http.Request) {
+	movieID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, "Invalid movie ID", http.StatusBadRequest)
+		return
+	}
+
+	var reviews []models.Review
+	if err := db.DB.Where("movie_id = ?", movieID).Find(&reviews).Error; err != nil {
+		http.Error(w, "Failed to fetch reviews", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(reviews)
+}
+
 func GetReviews(w http.ResponseWriter, r *http.Request) {
 	var reviews []models.Review
 	db.DB.Find(&reviews)
