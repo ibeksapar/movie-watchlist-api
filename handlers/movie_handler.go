@@ -12,9 +12,50 @@ import (
 
 func GetMovies(w http.ResponseWriter, r *http.Request) {
 	var movies []models.Movie
-	db.DB.Preload("Genre").Find(&movies)
+
+	genreID := r.URL.Query().Get("genre_id")
+	title := r.URL.Query().Get("title")
+	minRating := r.URL.Query().Get("min_rating")
+	maxRating := r.URL.Query().Get("max_rating")
+	sortBy := r.URL.Query().Get("sort")
+
+	query := db.DB.Preload("Genre")
+
+	if genreID != "" {
+		query = query.Where("genre_id = ?", genreID)
+	}
+	
+	if title != "" {
+		query = query.Where("LOWER(title) LIKE ?", "%"+title+"%")
+	}
+
+	if minRating != "" {
+		query = query.Where("rating >= ?", minRating)
+	}
+
+	if maxRating != "" {
+		query = query.Where("rating <= ?", maxRating)
+	}
+
+	switch sortBy {
+		case "rating_asc":
+			query = query.Order("rating ASC")
+		case "rating_desc":
+			query = query.Order("rating DESC")
+		case "title_asc":
+			query = query.Order("title ASC")
+		case "title_desc":
+			query = query.Order("title DESC")
+	}
+
+	if err := query.Find(&movies).Error; err != nil {
+		http.Error(w, "Failed to fetch movies", http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(movies)
 }
+
 
 func GetMovieByID(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
