@@ -12,7 +12,7 @@ import (
 
 func main() {
 	db.Connect()
-	db.DB.AutoMigrate(&models.Genre{}, &models.Movie{})
+	db.DB.AutoMigrate(&models.Genre{}, &models.Movie{}, &models.Review{})
 
 	r := mux.NewRouter()
 
@@ -27,6 +27,13 @@ func main() {
 	r.HandleFunc("/genres", handlers.CreateGenre).Methods("POST")
 	r.HandleFunc("/genres/{id}", handlers.UpdateGenre).Methods("PUT")
 	r.HandleFunc("/genres/{id}", handlers.DeleteGenre).Methods("DELETE")
+
+	r.HandleFunc("/reviews", handlers.CreateReview).Methods("POST")
+	r.HandleFunc("/reviews", handlers.GetReviews).Methods("GET")
+	r.HandleFunc("/reviews/{id}", handlers.GetReviewByID).Methods("GET")
+	r.HandleFunc("/reviews/{id}", handlers.UpdateReview).Methods("PUT")
+	r.HandleFunc("/reviews/{id}", handlers.DeleteReview).Methods("DELETE")
+
 
 	log.Println("Server running at http://localhost:8080")
 	http.ListenAndServe(":8080", r)

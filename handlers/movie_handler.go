@@ -35,7 +35,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 
 	offset := (page - 1) * limit
 
-	query := db.DB.Preload("Genre")
+	query := db.DB.Preload("Genre").Preload("Reviews")
 
 	if genreID != "" {
 		query = query.Where("genre_id = ?", genreID)
@@ -76,7 +76,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 func GetMovieByID(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	var movie models.Movie
-	result := db.DB.Preload("Genre").First(&movie, id)
+	result := db.DB.Preload("Genre").Preload("Reviews").First(&movie, id)
 
 	if result.Error != nil {
 		http.Error(w, "Movie not found", http.StatusNotFound)
