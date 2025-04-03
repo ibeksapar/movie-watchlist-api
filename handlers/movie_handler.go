@@ -19,6 +19,22 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 	maxRating := r.URL.Query().Get("max_rating")
 	sortBy := r.URL.Query().Get("sort")
 
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+
+	if page <= 0 {
+		page = 1
+	}
+	
+	if limit <= 0 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
 	query := db.DB.Preload("Genre")
 
 	if genreID != "" {
@@ -48,7 +64,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 			query = query.Order("title DESC")
 	}
 
-	if err := query.Find(&movies).Error; err != nil {
+	if err := query.Limit(limit).Offset(offset).Find(&movies).Error; err != nil {
 		http.Error(w, "Failed to fetch movies", http.StatusInternalServerError)
 		return
 	}
