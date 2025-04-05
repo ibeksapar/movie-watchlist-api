@@ -14,6 +14,8 @@ func main() {
 	db.Connect()
 	db.DB.AutoMigrate(&models.Genre{}, &models.Movie{}, &models.Review{})
 
+	db.Seed() 
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/movies", handlers.GetMovies).Methods("GET")
