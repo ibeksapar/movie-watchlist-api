@@ -5,15 +5,31 @@ import (
 	"movie-watchlist-api/db"
 	"movie-watchlist-api/handlers"
 	"movie-watchlist-api/middlewares"
-	"movie-watchlist-api/models"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	db.Connect()
-	db.DB.AutoMigrate(&models.Genre{}, &models.Movie{}, &models.Review{}, &models.User{})
+	// db.DB.AutoMigrate(&models.Genre{}, &models.Movie{}, &models.Review{}, &models.User{})
+
+	databaseURL := "postgres://postgres:postgres@localhost:2345/watchlist?sslmode=disable"
+
+	m, err := migrate.New(
+		"file://db/migrations",
+		databaseURL,
+	)
+	if err != nil {
+		log.Fatal("Migration setup failed: ", err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Migration failed: ", err)
+	}
 
 	db.Seed() 
 
