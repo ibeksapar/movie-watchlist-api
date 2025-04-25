@@ -116,6 +116,7 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db.DB.Create(&movie)
+	w.WriteHeader(http.StatusCreated) 
 	json.NewEncoder(w).Encode(movie)
 }
 
