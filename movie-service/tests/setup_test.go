@@ -1,6 +1,7 @@
-package handlers
+package tests
 
 import (
+	"movie-service/movie_db"
 	"movie-watchlist-api/db"
 	"os"
 	"testing"
@@ -27,7 +28,7 @@ func TestMain(m *testing.M) {
 		panic("Failed to apply migrations: " + err.Error())
 	}
 
-	db.Seed()
+	movie_db.Seed()
 
 	os.Exit(m.Run())
 }

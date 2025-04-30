@@ -1,9 +1,9 @@
-package handlers
+package tests
 
 import (
 	"log"
+	"movie-service/models"
 	"movie-watchlist-api/db"
-	"movie-watchlist-api/models"
 )
 
 func CreateTestGenre() models.Genre {

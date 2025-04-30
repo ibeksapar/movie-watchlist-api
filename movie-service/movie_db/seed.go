@@ -1,19 +1,21 @@
-package db
+package movie_db
 
 import (
 	"log"
-	"movie-watchlist-api/models"
+	"movie-service/models"
+
+	"movie-watchlist-api/db"
 )
 
 func Seed() {
 	log.Println("Seeding database...")
 
-	DB.Exec("DELETE FROM reviews")
-	DB.Exec("DELETE FROM movies")
-	DB.Exec("DELETE FROM genres")
-	DB.Exec("ALTER SEQUENCE reviews_id_seq RESTART WITH 1")
-	DB.Exec("ALTER SEQUENCE movies_id_seq RESTART WITH 1")
-	DB.Exec("ALTER SEQUENCE genres_id_seq RESTART WITH 1")
+	db.DB.Exec("DELETE FROM reviews")
+	db.DB.Exec("DELETE FROM movies")
+	db.DB.Exec("DELETE FROM genres")
+	db.DB.Exec("ALTER SEQUENCE reviews_id_seq RESTART WITH 1")
+	db.DB.Exec("ALTER SEQUENCE movies_id_seq RESTART WITH 1")
+	db.DB.Exec("ALTER SEQUENCE genres_id_seq RESTART WITH 1")
 
 	genres := []models.Genre{
 		{Name: "Thriller", Description: "Suspenseful stories that keep you on edge"},
@@ -24,7 +26,7 @@ func Seed() {
 	}
 
 	for _, g := range genres {
-		DB.Create(&g)
+		db.DB.Create(&g)
 	}
 
 	movies := []models.Movie{
@@ -41,7 +43,7 @@ func Seed() {
 	}
 
 	for _, m := range movies {
-		DB.Create(&m)
+		db.DB.Create(&m)
 	}
 
 	reviews := []models.Review{
@@ -74,11 +76,11 @@ func Seed() {
 	}
 
 	for _, r := range reviews {
-		DB.Create(&r)
+		db.DB.Create(&r)
 	}
 
 	var allMovies []models.Movie
-	DB.Find(&allMovies)
+	db.DB.Find(&allMovies)
 	for _, movie := range allMovies {
 		recalculateRating(movie.ID)
 	}
@@ -88,10 +90,10 @@ func Seed() {
 
 func recalculateRating(movieID uint) {
 	var reviews []models.Review
-	DB.Where("movie_id = ?", movieID).Find(&reviews)
+	db.DB.Where("movie_id = ?", movieID).Find(&reviews)
 
 	if len(reviews) == 0 {
-		DB.Model(&models.Movie{}).Where("id = ?", movieID).Update("rating", 0)
+		db.DB.Model(&models.Movie{}).Where("id = ?", movieID).Update("rating", 0)
 		return
 	}
 
@@ -101,5 +103,5 @@ func recalculateRating(movieID uint) {
 	}
 
 	avg := float64(total) / float64(len(reviews))
-	DB.Model(&models.Movie{}).Where("id = ?", movieID).Update("rating", avg)
+	db.DB.Model(&models.Movie{}).Where("id = ?", movieID).Update("rating", avg)
 }

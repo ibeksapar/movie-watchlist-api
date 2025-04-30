@@ -1,14 +1,16 @@
-package handlers
+package tests
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"movie-watchlist-api/models"
+	"movie-service/handlers"
+	"movie-service/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,10 +20,12 @@ func TestCreateMovie(t *testing.T) {
 	newMovie := models.Movie{Title: "New Movie", GenreID: genre.ID, Rating: 9}
 	body, _ := json.Marshal(newMovie)
 
+	r := gin.Default()
+	r.POST("/movies", handlers.CreateMovie)
+
 	req, _ := http.NewRequest("POST", "/movies", bytes.NewBuffer(body))
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateMovie)
-	handler.ServeHTTP(rr, req)
+	r.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
@@ -31,10 +35,12 @@ func TestCreateMovie(t *testing.T) {
 }
 
 func TestGetMovies(t *testing.T) {
+	r := gin.Default()
+	r.GET("/movies", handlers.GetMovies)
+
 	req, _ := http.NewRequest("GET", "/movies", nil)
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetMovies)
-	handler.ServeHTTP(rr, req)
+	r.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 
@@ -47,12 +53,14 @@ func TestGetMovieByID(t *testing.T) {
 	genre := CreateTestGenre()
 	movie := CreateTestMovie(genre.ID)
 
+	r := gin.Default()
+	r.GET("/movies/:id", handlers.GetMovieByID)
+
 	req := httptest.NewRequest("GET", fmt.Sprintf("/movies/%d", movie.ID), nil)
 	req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprint(movie.ID)})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetMovieByID)
-	handler.ServeHTTP(rr, req)
+	r.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 
@@ -67,12 +75,14 @@ func TestUpdateMovie(t *testing.T) {
 	updated := models.Movie{Title: "Updated Title", GenreID: genre.ID, Rating: 8}
 	body, _ := json.Marshal(updated)
 
+	r := gin.Default()
+	r.PUT("/movies/:id", handlers.UpdateMovie)
+
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/movies/%d", movie.ID), bytes.NewBuffer(body))
 	req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprint(movie.ID)})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(UpdateMovie)
-	handler.ServeHTTP(rr, req)
+	r.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 
@@ -85,12 +95,14 @@ func TestDeleteMovie(t *testing.T) {
 	genre := CreateTestGenre()
 	movie := CreateTestMovie(genre.ID)
 
+	r := gin.Default()
+	r.DELETE("/movies/:id", handlers.DeleteMovie)
+
 	req := httptest.NewRequest("DELETE", fmt.Sprintf("/movies/%d", movie.ID), nil)
 	req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprint(movie.ID)})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(DeleteMovie)
-	handler.ServeHTTP(rr, req)
+	r.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusNoContent, rr.Code)
 }
