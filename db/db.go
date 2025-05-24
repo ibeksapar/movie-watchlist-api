@@ -12,18 +12,41 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	dbName := os.Getenv("DB_NAME")
-	if dbName == "" {
-		dbName = "watchlist" 
-	}
+    host := os.Getenv("DB_HOST")
+    if host == "" {
+        host = "localhost"
+    }
+    
+    port := os.Getenv("DB_PORT")
+    if port == "" {
+        port = "2345"
+    }
 
-	dsn := fmt.Sprintf("host=localhost user=postgres password=postgres dbname=%s port=2345 sslmode=disable", dbName)
+    user := os.Getenv("DB_USER")
+    if user == "" {
+        user = "postgres"
+    }
 
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
+    password := os.Getenv("DB_PASSWORD")
+    if password == "" {
+        password = "postgres"
+    }
 
-	fmt.Println("Connected to PostgreSQL:", dbName)
+    dbName := os.Getenv("DB_NAME")
+    if dbName == "" {
+        dbName = "watchlist"
+    }
+
+    dsn := fmt.Sprintf(
+        "host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+        host, user, password, dbName, port,
+    )
+
+    var err error
+    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatal("Failed to connect to database:", err)
+    }
+
+    log.Println("Connected to PostgreSQL:", host, port, dbName)
 }

@@ -20,6 +20,7 @@ func TestMain(m *testing.M) {
 		"file://../db/migrations",
 		databaseURL,
 	)
+
 	if err != nil {
 		panic("Failed to setup migration for test DB: " + err.Error())
 	}
@@ -29,6 +30,5 @@ func TestMain(m *testing.M) {
 	}
 
 	movie_db.Seed()
-
 	os.Exit(m.Run())
 }

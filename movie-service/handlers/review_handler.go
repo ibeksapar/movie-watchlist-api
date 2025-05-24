@@ -28,7 +28,6 @@ func CreateReview(c *gin.Context) {
 	}
 
 	recalculateRating(review.MovieID)
-
 	c.JSON(http.StatusCreated, review)
 }
 
@@ -64,7 +63,6 @@ func CreateReviewForMovie(c *gin.Context) {
 	}
 
 	recalculateRating(review.MovieID)
-
 	c.JSON(http.StatusCreated, review)
 }
 
@@ -123,13 +121,13 @@ func UpdateReview(c *gin.Context) {
 
 	review.Content = updated.Content
 	review.Score = updated.Score
+
 	if err := db.DB.Save(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update review"})
 		return
 	}
 
 	recalculateRating(review.MovieID)
-
 	c.JSON(http.StatusOK, review)
 }
 
@@ -148,12 +146,12 @@ func DeleteReview(c *gin.Context) {
 	}
 
 	recalculateRating(review.MovieID)
-
 	c.Status(http.StatusNoContent)
 }
 
 func recalculateRating(movieID uint) {
 	var reviews []models.Review
+	
 	if err := db.DB.Where("movie_id = ?", movieID).Find(&reviews).Error; err != nil {
 		return
 	}

@@ -11,6 +11,7 @@ func CreateTestGenre() models.Genre {
 	if err := db.DB.Create(&genre).Error; err != nil {
 		log.Fatalf("Failed to create test genre: %v", err)
 	}
+
 	return genre
 }
 
@@ -19,5 +20,6 @@ func CreateTestMovie(genreID uint) models.Movie {
 	if err := db.DB.Create(&movie).Error; err != nil {
 		log.Fatalf("Failed to create test movie: %v", err)
 	}
+	
 	return movie
 }

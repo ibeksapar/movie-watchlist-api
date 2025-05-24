@@ -81,6 +81,7 @@ func Seed() {
 
 	var allMovies []models.Movie
 	db.DB.Find(&allMovies)
+	
 	for _, movie := range allMovies {
 		recalculateRating(movie.ID)
 	}

@@ -36,8 +36,8 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
-	user.Password = string(hashedPassword)
 
+	user.Password = string(hashedPassword)
 	db.DB.Create(&user)
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -74,6 +74,7 @@ func Login(c *gin.Context) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
+	
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
 		return

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/google/uuid"
 )
 
@@ -15,10 +14,9 @@ func LoggerMiddleware() gin.HandlerFunc {
 		requestID := uuid.New().String()
 
 		c.Set("RequestID", requestID)
-
 		c.Next()
-
 		duration := time.Since(start)
+		
 		log.Printf("[%s] [RequestID: %s] %s %s - %d - Duration: %v",
 			start.Format(time.RFC3339),
 			requestID,

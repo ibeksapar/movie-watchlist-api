@@ -19,6 +19,7 @@ func TestMain(m *testing.M) {
 		"file://../db/migrations",
 		databaseURL,
 	)
+
 	if err != nil {
 		panic("Failed to setup migration for test DB: " + err.Error())
 	}
@@ -26,8 +27,6 @@ func TestMain(m *testing.M) {
 	if err := mg.Up(); err != nil && err != migrate.ErrNoChange {
 		panic("Failed to apply migrations: " + err.Error())
 	}
-
-	// db.Seed()
 
 	os.Exit(m.Run())
 }

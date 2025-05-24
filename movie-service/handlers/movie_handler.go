@@ -1,75 +1,89 @@
 package handlers
 
 import (
+	"fmt"
 	"movie-service/models"
 	"movie-watchlist-api/db"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetMovies(c *gin.Context) {
-    var movies []models.Movie
+	var movies []models.Movie
 
-    genreID := c.DefaultQuery("genre_id", "")
-    title := c.DefaultQuery("title", "")
-    minRating := c.DefaultQuery("min_rating", "")
-    maxRating := c.DefaultQuery("max_rating", "")
-    sortBy := c.DefaultQuery("sort", "")
+	genreID := c.DefaultQuery("genre_id", "")
+	title := c.DefaultQuery("title", "")
+	minRating := c.DefaultQuery("min_rating", "")
+	maxRating := c.DefaultQuery("max_rating", "")
+	sortBy := c.DefaultQuery("sort", "")
 
-    pageStr := c.DefaultQuery("page", "1")
-    limitStr := c.DefaultQuery("limit", "10")
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
 
-    page, _ := strconv.Atoi(pageStr)
-    limit, _ := strconv.Atoi(limitStr)
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
 
-    if page <= 0 {
-        page = 1
-    }
+	if page <= 0 {
+		page = 1
+	}
 
-    if limit <= 0 {
-        limit = 10
-    }
+	if limit <= 0 {
+		limit = 10
+	}
 
-    offset := (page - 1) * limit
+	offset := (page - 1) * limit
+	query := db.DB.Preload("Genre").Preload("Reviews")
 
-    query := db.DB.Preload("Genre").Preload("Reviews")
+	if genreID != "" {
+		query = query.Where("genre_id = ?", genreID)
+	}
 
-    if genreID != "" {
-        query = query.Where("genre_id = ?", genreID)
-    }
+	if title != "" {
+		query = query.Where("LOWER(title) LIKE ?", "%"+title+"%")
+	}
 
-    if title != "" {
-        query = query.Where("LOWER(title) LIKE ?", "%"+title+"%")
-    }
+	if minRating != "" {
+		query = query.Where("rating >= ?", minRating)
+	}
 
-    if minRating != "" {
-        query = query.Where("rating >= ?", minRating)
-    }
+	if maxRating != "" {
+		query = query.Where("rating <= ?", maxRating)
+	}
 
-    if maxRating != "" {
-        query = query.Where("rating <= ?", maxRating)
-    }
+	switch sortBy {
+	case "rating_asc":
+		query = query.Order("rating ASC")
+	case "rating_desc":
+		query = query.Order("rating DESC")
+	case "title_asc":
+		query = query.Order("title ASC")
+	case "title_desc":
+		query = query.Order("title DESC")
+	default:
+		query = query.Order("id DESC")
+	}
 
-    switch sortBy {
-    case "rating_asc":
-        query = query.Order("rating ASC")
-    case "rating_desc":
-        query = query.Order("rating DESC")
-    case "title_asc":
-        query = query.Order("title ASC")
-    case "title_desc":
-        query = query.Order("title DESC")
-    }
-
-    if err := query.Limit(limit).Offset(offset).Find(&movies).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies"})
+	 var total int64
+		if err := query.Session(&gorm.Session{}).Model(&models.Movie{}).Count(&total).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count movies"})
         return
     }
 
-    c.JSON(http.StatusOK, movies)
+	if err := query.Limit(limit).Offset(offset).Find(&movies).Error; err != nil {
+         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies"})
+         return
+     }
+
+    c.JSON(http.StatusOK, gin.H{
+        "movies": movies,
+        "total":  total,
+    })
 }
+
 
 func GetMovieByID(c *gin.Context) {
     id, _ := strconv.Atoi(c.Param("id"))
@@ -92,8 +106,8 @@ func CreateMovie(c *gin.Context) {
         return
     }
 
-    if movie.Title == "" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Title is required"})
+    if movie.Title == "" || movie.GenreID == 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Title and GenreID are required"})
         return
     }
 
@@ -102,13 +116,11 @@ func CreateMovie(c *gin.Context) {
         return
     }
 
-    var genre models.Genre
-    if err := db.DB.First(&genre, movie.GenreID).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Genre does not exist"})
+    if err := db.DB.Create(&movie).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving movie"})
         return
     }
 
-    db.DB.Create(&movie)
     c.JSON(http.StatusCreated, movie)
 }
 
@@ -143,4 +155,54 @@ func DeleteMovie(c *gin.Context) {
     id, _ := strconv.Atoi(c.Param("id"))
     db.DB.Delete(&models.Movie{}, id)
     c.Status(http.StatusNoContent)
+}
+
+func UploadCover(c *gin.Context) {
+    id, _ := strconv.Atoi(c.Param("id"))
+    var movie models.Movie
+    if err := db.DB.First(&movie, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+        return
+    }
+
+    file, err := c.FormFile("file")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file"})
+        return
+    }
+
+    filename := fmt.Sprintf("%d_%s", movie.ID, filepath.Base(file.Filename))
+    savePath := filepath.Join("uploads", filename)
+    if err := c.SaveUploadedFile(file, savePath); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+        return
+    }
+
+    url := "/uploads/" + filename
+
+    movie.CoverURL = url
+    if err := db.DB.Save(&movie).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update movie"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"url": url})
+}
+
+func UploadGeneral(c *gin.Context) {
+    file, err := c.FormFile("file")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file"})
+        return
+    }
+
+    filename := filepath.Base(file.Filename)
+    savePath := filepath.Join("uploads", filename)
+    if err := c.SaveUploadedFile(file, savePath); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+        return
+    }
+
+    url := "/uploads/" + filename
+    c.JSON(http.StatusOK, gin.H{"url": url})
 }
